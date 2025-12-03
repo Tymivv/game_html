@@ -245,7 +245,8 @@
 </head>
 <body>
 <div class="app">
-  <h1>Гра: скільки місця займають твої файли?</h1>
+  <!--<h1>Гра: скільки місця займають твої файли?</h1>-->
+  <h1>🎒 Що в твоєму рюкзаку?</h1>
 
   <div class="card">
     <p class="hint">
@@ -253,11 +254,10 @@
     </p>
 
     <div class="controls">
-        <button id="analyzeComputerBtn">🧠 Аналіз комп’ютера</button>
-        <button id="pickFolderBtn" class="secondary">💻 Обрати папку / диск</button>
-        <button id="resetBtn" class="secondary">🔁 Скинути результат</button>
+      <!-- <button id="pickFilesBtn">📂 Обрати файли</button> -->
+      <button id="pickFolderBtn" class="secondary">💻 Обрати папку / диск для аналізу</button>
+      <button id="resetBtn" class="secondary">🔁 Скинути результат</button>
     </div>
-
 
     <!-- приховані input-и -->
     <!-- <input id="fileInput" type="file" multiple style="display:none" /> -->
@@ -329,25 +329,6 @@
 
 <script>
   // ===== Налаштування типів файлів =====
-
-  // Папки, які враховує режим "Аналіз комп'ютера"
-const ALLOWED_FOLDERS = [
-  // Desktop / Робочий стіл
-  ['desktop', 'робочий стіл', 'рабочий стол'],
-  // Downloads / Завантаження
-  ['downloads', 'завантаження', 'загрузки'],
-  // Documents / Документи
-  ['documents', 'документи', 'документы', 'my documents'],
-  // Pictures / Photos / Images
-  ['pictures', 'photos', 'images', 'фото', 'изображения']
-];
-
-const ALLOWED_FOLDERS_LABEL =
-  'Робочий стіл, Завантаження, Документи, Фото/Зображення';
-
-// Максимальна кількість файлів, щоб не вбити браузер
-const MAX_FILES_FOR_ANALYSIS = 100000;
-
   const FILE_TYPES = {
     photo: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'raw', 'bmp'],
     video: ['mp4', 'mov', 'avi', 'mkv', 'webm'],
@@ -374,21 +355,6 @@ const MAX_FILES_FOR_ANALYSIS = 100000;
     bunny: 'bunny_frame.png',
     raccoon: 'raccoon_frame.png'
   };
-
-function isAllowedFolderPath(relativePath) {
-  if (!relativePath) return false;
-  const p = relativePath.toLowerCase();
-
-  return ALLOWED_FOLDERS.some(group =>
-    group.some(name =>
-      p.includes('/' + name + '/') ||
-      p.includes('\\' + name + '\\') ||
-      p.startsWith(name + '/') ||
-      p.startsWith(name + '\\')
-    )
-  );
-}
-
 
   // ===== DOM-елементи =====
 //   const pickFilesBtn   = document.getElementById('pickFilesBtn');
@@ -419,13 +385,8 @@ function isAllowedFolderPath(relativePath) {
   const downloadLinkEl  = document.getElementById('downloadLink');
   const maskPreviewEl   = document.getElementById('maskPreview');
 
-  const analyzeComputerBtn = document.getElementById('analyzeComputerBtn');
-
-
   let cameraStream = null;
   let currentAnimalType = null; // 'deer' | 'bunny' | 'raccoon'
-  let analysisMode = 'custom'; // 'auto' | 'custom'
-
 
   // ===== Допоміжні функції =====
   function formatBytes(bytes) {
@@ -497,119 +458,85 @@ function isAllowedFolderPath(relativePath) {
 
   // ===== Обробка вибору файлів =====
 //   pickFilesBtn.addEventListener('click', () => fileInput.click());
-  // було: pickFolderBtn.addEventListener(...)
+  pickFolderBtn.addEventListener('click', () => folderInput.click());
+  resetBtn.addEventListener('click', resetState);
 
-analyzeComputerBtn.addEventListener('click', () => {
-  analysisMode = 'auto';   // аналізуємо тільки дозволені папки всередині вибраного дерева
-  folderInput.click();
-});
+//   fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+  folderInput.addEventListener('change', () => handleFiles(folderInput.files));
 
-pickFolderBtn.addEventListener('click', () => {
-  analysisMode = 'custom'; // аналізуємо саме обрану папку
-  folderInput.click();
-});
+  function handleFiles(fileList) {
+    if (!fileList || fileList.length === 0) return;
 
-resetBtn.addEventListener('click', resetState);
+    const files = Array.from(fileList);
+    progressSection.style.display = 'block';
+    resultsSection.style.display  = 'none';
+    progressBar.style.width       = '0%';
+    progressText.textContent      = 'Підрахунок файлів…';
 
-folderInput.addEventListener('change', () => handleFiles(folderInput.files));
+    // pickFilesBtn.disabled  = true;
+    pickFolderBtn.disabled = true;
+    resetBtn.disabled      = true;
 
+    const stats = {
+      totalFiles: 0,
+      totalBytes: 0,
+      categories: {}
+    };
 
+    const total = files.length;
+    let processed = 0;
 
+    for (const key of Object.keys(FILE_TYPES)) {
+      stats.categories[key] = { count: 0, bytes: 0 };
+    }
+    stats.categories.other = { count: 0, bytes: 0 };
 
- function handleFiles(fileList) {
-  if (!fileList || fileList.length === 0) return;
+    const batchSize = 400;
 
-  const files = Array.from(fileList);
+    function processBatch(start) {
+      const end = Math.min(start + batchSize, total);
+      for (let i = start; i < end; i++) {
+        const file = files[i];
+        const path = file.webkitRelativePath || file.name;
 
-  // Захист від надто великого набору файлів
-  if (files.length > MAX_FILES_FOR_ANALYSIS) {
-    alert(
-      `Ти обрав(ла) дуже багато файлів (${files.length.toLocaleString('uk-UA')}). ` +
-      `Аналіз такого обсягу може «підвісити» браузер.\n\n` +
-      `У режимі "Аналіз комп'ютера" краще обирати папку з профілем користувача, ` +
-      `а в режимі "Обрати папку" — конкретну теку з особистими файлами.`
-    );
-    return;
-  }
+        if (isSystemPath(path)) {
+          processed++;
+          continue;
+        }
 
-  progressSection.style.display = 'block';
-  resultsSection.style.display  = 'none';
-  progressBar.style.width       = '0%';
-  progressText.textContent      = 'Підрахунок файлів…';
+        const category = classifyFile(file);
+        if (!category) {
+          processed++;
+          continue;
+        }
 
-  pickFolderBtn.disabled      = true;
-  analyzeComputerBtn.disabled = true;
-  resetBtn.disabled           = true;
+        stats.totalFiles++;
+        stats.totalBytes += file.size;
+        if (!stats.categories[category]) {
+          stats.categories[category] = { count: 0, bytes: 0 };
+        }
+        stats.categories[category].count++;
+        stats.categories[category].bytes += file.size;
 
-  const stats = {
-    totalFiles: 0,
-    totalBytes: 0,
-    categories: {}
-  };
-
-  const total = files.length;
-  let processed = 0;
-
-  for (const key of Object.keys(FILE_TYPES)) {
-    stats.categories[key] = { count: 0, bytes: 0 };
-  }
-  stats.categories.other = { count: 0, bytes: 0 };
-
-  const batchSize = 300;
-
-  function processBatch(start) {
-    const end = Math.min(start + batchSize, total);
-
-    for (let i = start; i < end; i++) {
-      const file = files[i];
-      const path = file.webkitRelativePath || file.name;
-
-      // 1) відсікаємо системні каталоги
-      if (isSystemPath(path)) {
         processed++;
-        continue;
       }
 
-      // 2) у режимі "Аналіз комп'ютера" враховуємо тільки дозволені папки
-      if (analysisMode === 'auto' && !isAllowedFolderPath(path)) {
-        processed++;
-        continue;
-      }
+      const percent = Math.round((processed / total) * 100);
+      progressBar.style.width  = `${percent}%`;
+      progressText.textContent = `Опрацьовано ${processed} з ${total} файлів (${percent}%)`;
 
-      const category = classifyFile(file);
-      if (!category) {
-        processed++;
-        continue;
+      if (processed < total) {
+        window.requestAnimationFrame(() => processBatch(end));
+      } else {
+        finalizeStats(stats);
+        // pickFilesBtn.disabled  = false;
+        pickFolderBtn.disabled = false;
+        resetBtn.disabled      = false;
       }
-
-      stats.totalFiles++;
-      stats.totalBytes += file.size;
-      if (!stats.categories[category]) {
-        stats.categories[category] = { count: 0, bytes: 0 };
-      }
-      stats.categories[category].count++;
-      stats.categories[category].bytes += file.size;
-
-      processed++;
     }
 
-    const percent = Math.round((processed / total) * 100);
-    progressBar.style.width  = `${percent}%`;
-    progressText.textContent = `Опрацьовано ${processed} з ${total} файлів (${percent}%)`;
-
-    if (processed < total) {
-      setTimeout(() => processBatch(end), 0);
-    } else {
-      finalizeStats(stats);
-      pickFolderBtn.disabled      = false;
-      analyzeComputerBtn.disabled = false;
-      resetBtn.disabled           = false;
-    }
+    window.requestAnimationFrame(() => processBatch(0));
   }
-
-  setTimeout(() => processBatch(0), 0);
-}
-
 
   function finalizeStats(stats) {
     resultsSection.style.display = 'grid';
@@ -651,8 +578,8 @@ folderInput.addEventListener('change', () => handleFiles(folderInput.files));
       currentAnimalType = 'deer';
       animalNameEl.textContent = 'Олень-охоронець 🦌';
       animalMsgEl.textContent =
-        `Увага: ${totalGB.toFixed(2)} GB твоїх особистих даних знаходяться під загрозою втрати при поломці диска! ` +
-        'Подумай, які файли варто перенести у хмару (наприклад, Google Диск).';
+        `⚠️ Увага: ${totalGB.toFixed(2)} GB твоїх особистих даних знаходяться під загрозою втрати при поломці диска! ` +
+        'Подумай, які файли варто перенести на Google Диск.';
       animalImgEl.src = 'deer.png';
       animalImgEl.alt = 'Олень';
     } else if (totalMB < 100) {
@@ -660,15 +587,15 @@ folderInput.addEventListener('change', () => handleFiles(folderInput.files));
       animalNameEl.textContent = 'Обережний зайчик 🐰';
       animalMsgEl.textContent =
         `У тебе всього ${totalMB.toFixed(1)} МБ файлів. Ти молодець, майже нічого зайвого! ` +
-        'Все одно корисно зберігати копії важливих файлів у хмарі.';
+        'Все одно корисно зберігати копії важливих файлів на Google Диск.';
       animalImgEl.src = 'bunny.png';
       animalImgEl.alt = 'Зайчик';
     } else {
       currentAnimalType = 'raccoon';
       animalNameEl.textContent = 'Хитрий єнот 🦝';
       animalMsgEl.textContent =
-        `У тебе приблизно ${totalGB.toFixed(2)} ГБ особистих файлів. Єнот каже, що це скарб! ` +
-        'Але частину фото й відео краще перенести в хмару, щоб не захаращувати комп’ютер.';
+        `⚠️ У тебе приблизно ${totalGB.toFixed(2)} ГБ особистих файлів. Єнот каже, що це скарб! ` +
+        'Але робочі файли краще перенести на Google Диск, щоб не захаращувати комп’ютер.';
       animalImgEl.src = 'raccoon.png';
       animalImgEl.alt = 'Єнот';
     }
