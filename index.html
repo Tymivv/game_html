@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>Гра: Скільки місця займають твої файли?</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+    }
+    .app {
+      max-width: 1100px;
+      width: 100%;
+      padding: 24px 16px 40px;
+    }
+    h1 {
+      margin-top: 0;
+      text-align: center;
+      font-size: 1.8rem;
+    }
+    .card {
+      background: #111827;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+      border: 1px solid #1f2937;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 10px 18px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      background: #22c55e;
+      color: #052e16;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(34,197,94,0.35);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.1s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button.secondary {
+      background: #1f2937;
+      color: #e5e7eb;
+      box-shadow: 0 8px 20px rgba(15,23,42,0.7);
+    }
+    button:active {
+      transform: translateY(1px) scale(0.99);
+      box-shadow: 0 5px 14px rgba(0,0,0,0.5);
+    }
+    button[disabled] {
+      opacity: 0.6;
+      cursor: default;
+      box-shadow: none;
+    }
+    .hint {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .progress-wrap {
+      margin: 12px 0 4px;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #020617;
+      overflow: hidden;
+      border: 1px solid #1e293b;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #a3e635);
+      transition: width 0.1s linear;
+    }
+    .progress-text {
+      font-size: 0.85rem;
+      text-align: right;
+      opacity: 0.75;
+      margin-top: 4px;
+    }
+    .layout {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: 18px;
+    }
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    .summary {
+      background: #020617;
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid #1f2937;
+      min-height: 260px;
+    }
+    .summary h2 {
+      font-size: 1.05rem;
+      margin: 0 0 8px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.93rem;
+      margin: 3px 0;
+    }
+    .summary-row span.label {
+      opacity: 0.8;
+    }
+    .summary-row span.value {
+      font-weight: 600;
+    }
+    .categories {
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+    .categories h3 {
+      font-size: 0.95rem;
+      margin: 4px 0 6px;
+    }
+    .categories-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 2px 0;
+      opacity: 0.9;
+    }
+    .animal-card {
+      background: radial-gradient(circle at top, #22c55e22, #020617);
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid #1f2937;
+      text-align: center;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .animal-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .animal-message {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-bottom: 10px;
+    }
+    .animal-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 16px;
+      object-fit: cover;
+      border: 1px solid #1f2937;
+      background: #020617;
+      margin-bottom: 6px;
+    }
+    .footer-note {
+      margin-top: 16px;
+      font-size: 0.8rem;
+      opacity: 0.7;
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #1e293b;
+      font-size: 0.75rem;
+      margin-bottom: 6px;
+    }
+
+    /* === Камера === */
+    .camera-section {
+      margin-top: 12px;
+      text-align: center;
+      width: 100%;
+    }
+    .camera-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .camera-view {
+      margin-top: 6px;
+      position: relative;
+      width: 100%;
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .camera-view video,
+    .camera-view canvas {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      display: block;
+    }
+    .camera-view img#maskPreview {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 240px; /* твоя правка */
+      border-radius: 12px;
+      pointer-events: none;
+      opacity: 0.9;
+      z-index: 3;
+    }
+    a#downloadLink {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 0.85rem;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #1f2937;
+      color: #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1>Гра: скільки місця займають твої файли?</h1>
+
+  <div class="card">
+    <p class="hint">
+      Обери папку на своєму комп’ютері. Ми порахуємо <b>тільки фото, відео, документи, PDF, DBF та інші офісні файли</b> — без системних.
+    </p>
+
+    <div class="controls">
+        <button id="analyzeComputerBtn">🧠 Аналіз комп’ютера</button>
+        <button id="pickFolderBtn" class="secondary">💻 Обрати папку / диск</button>
+        <button id="resetBtn" class="secondary">🔁 Скинути результат</button>
+    </div>
+
+
+    <!-- приховані input-и -->
+    <!-- <input id="fileInput" type="file" multiple style="display:none" /> -->
+    <input id="folderInput" type="file" webkitdirectory directory multiple style="display:none" />
+
+    <div class="progress-wrap" id="progressSection" style="display:none;">
+      <div class="progress-bar-bg">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="progress-text" id="progressText">Готуємось до підрахунку…</div>
+    </div>
+
+    <div class="layout" id="resultsSection" style="display:none;">
+      <!-- Ліва частина: підсумок -->
+      <div class="summary" id="summaryBlock">
+        <div class="badge">Результат аналізу</div>
+        <h2>Підсумок файлів</h2>
+
+        <div class="summary-row">
+          <span class="label">Кількість файлів:</span>
+          <span class="value" id="fileCount">0</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Загальний розмір:</span>
+          <span class="value" id="totalSize">0 МБ</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Орієнтовний розмір у ГБ:</span>
+          <span class="value" id="totalSizeGB">0 ГБ</span>
+        </div>
+
+        <div class="categories">
+          <h3>За категоріями</h3>
+          <div id="categoriesList"></div>
+        </div>
+      </div>
+
+      <!-- Права частина: тваринка + камера -->
+      <div class="animal-card" id="animalBlock">
+        <div class="badge">Ігрове повідомлення</div>
+        <div class="animal-name" id="animalName">Поки що тихо…</div>
+        <img id="animalImage" class="animal-img" alt="Тваринка" />
+        <div class="animal-message" id="animalMessage">
+          Обери папку або файли, щоб дізнатися, хто сьогодні до тебе завітає: зайчик, єнот чи олень 🐰🦝🦌
+        </div>
+
+        <div class="camera-section">
+          <div class="badge">Селфі з тваринкою</div>
+          <div class="camera-controls">
+            <button id="startCameraBtn" class="secondary">🎥 Увімкнути камеру</button>
+            <button id="takePhotoBtn" disabled>📸 Зробити фото</button>
+            <button id="stopCameraBtn" class="secondary" disabled>⏹ Зупинити камеру</button>
+          </div>
+          <div class="camera-view">
+            <video id="cameraVideo" autoplay playsinline style="display:none;"></video>
+            <canvas id="photoCanvas" width="640" height="480" style="display:none;"></canvas>
+            <img id="maskPreview" alt="Маска тваринки" style="display:none;">
+          </div>
+          <a id="downloadLink" href="#" style="display:none;">⬇️ Завантажити фото</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      Усі розрахунки та робота з камерою виконуються <b>локально в браузері</b>. Файли та фото нікуди не передаються.
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== Налаштування типів файлів =====
+
+  // Папки, які враховує режим "Аналіз комп'ютера"
+const ALLOWED_FOLDERS = [
+  // Desktop / Робочий стіл
+  ['desktop', 'робочий стіл', 'рабочий стол'],
+  // Downloads / Завантаження
+  ['downloads', 'завантаження', 'загрузки'],
+  // Documents / Документи
+  ['documents', 'документи', 'документы', 'my documents'],
+  // Pictures / Photos / Images
+  ['pictures', 'photos', 'images', 'фото', 'изображения']
+];
+
+const ALLOWED_FOLDERS_LABEL =
+  'Робочий стіл, Завантаження, Документи, Фото/Зображення';
+
+// Максимальна кількість файлів, щоб не вбити браузер
+const MAX_FILES_FOR_ANALYSIS = 100000;
+
+  const FILE_TYPES = {
+    photo: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'raw', 'bmp'],
+    video: ['mp4', 'mov', 'avi', 'mkv', 'webm'],
+    docs: ['doc', 'docx', 'odt', 'rtf'],
+    sheets: ['xls', 'xlsx', 'ods', 'csv', 'dbf'],
+    pdf: ['pdf'],
+    slides: ['ppt', 'pptx', 'odp'],
+    text: ['txt', 'md']
+  };
+
+  const USER_EXT_SET = new Set(
+    Object.values(FILE_TYPES).flat().map(ext => ext.toLowerCase())
+  );
+
+  const SYSTEM_PATH_PATTERNS = [
+    'windows\\', 'program files', 'programdata', 'system32',
+    '/usr/', '/bin/', '/sbin/', '/etc/', '/var/', '/opt/',
+    '/library/', '/system/', 'application support'
+  ];
+
+  // Маски для кожної тваринки
+  const FRAME_FILES = {
+    deer: 'deer_frame.png',
+    bunny: 'bunny_frame.png',
+    raccoon: 'raccoon_frame.png'
+  };
+
+function isAllowedFolderPath(relativePath) {
+  if (!relativePath) return false;
+  const p = relativePath.toLowerCase();
+
+  return ALLOWED_FOLDERS.some(group =>
+    group.some(name =>
+      p.includes('/' + name + '/') ||
+      p.includes('\\' + name + '\\') ||
+      p.startsWith(name + '/') ||
+      p.startsWith(name + '\\')
+    )
+  );
+}
+
+
+  // ===== DOM-елементи =====
+//   const pickFilesBtn   = document.getElementById('pickFilesBtn');
+  const pickFolderBtn  = document.getElementById('pickFolderBtn');
+  const resetBtn       = document.getElementById('resetBtn');
+//   const fileInput      = document.getElementById('fileInput');
+  const folderInput    = document.getElementById('folderInput');
+
+  const progressSection = document.getElementById('progressSection');
+  const progressBar     = document.getElementById('progressBar');
+  const progressText    = document.getElementById('progressText');
+
+  const resultsSection  = document.getElementById('resultsSection');
+  const fileCountEl     = document.getElementById('fileCount');
+  const totalSizeEl     = document.getElementById('totalSize');
+  const totalSizeGBEl   = document.getElementById('totalSizeGB');
+  const categoriesList  = document.getElementById('categoriesList');
+
+  const animalNameEl    = document.getElementById('animalName');
+  const animalMsgEl     = document.getElementById('animalMessage');
+  const animalImgEl     = document.getElementById('animalImage');
+
+  const startCameraBtn  = document.getElementById('startCameraBtn');
+  const stopCameraBtn   = document.getElementById('stopCameraBtn');
+  const takePhotoBtn    = document.getElementById('takePhotoBtn');
+  const videoEl         = document.getElementById('cameraVideo');
+  const canvasEl        = document.getElementById('photoCanvas');
+  const downloadLinkEl  = document.getElementById('downloadLink');
+  const maskPreviewEl   = document.getElementById('maskPreview');
+
+  const analyzeComputerBtn = document.getElementById('analyzeComputerBtn');
+
+
+  let cameraStream = null;
+  let currentAnimalType = null; // 'deer' | 'bunny' | 'raccoon'
+  let analysisMode = 'custom'; // 'auto' | 'custom'
+
+
+  // ===== Допоміжні функції =====
+  function formatBytes(bytes) {
+    if (bytes === 0) return '0 Б';
+    const k = 1024;
+    const sizes = ['Б', 'КБ', 'МБ', 'ГБ', 'ТБ'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const value = (bytes / Math.pow(k, i)).toFixed(2);
+    return `${value} ${sizes[i]}`;
+  }
+
+  function isSystemPath(path) {
+    if (!path) return false;
+    const lower = path.toLowerCase();
+    return SYSTEM_PATH_PATTERNS.some(pattern => lower.includes(pattern));
+  }
+
+  function getExt(fileName) {
+    const idx = fileName.lastIndexOf('.');
+    if (idx === -1) return '';
+    return fileName.slice(idx + 1).toLowerCase();
+  }
+
+  function classifyFile(file) {
+    const ext = getExt(file.name);
+    if (!USER_EXT_SET.has(ext)) return null;
+    for (const [category, exts] of Object.entries(FILE_TYPES)) {
+      if (exts.includes(ext)) return category;
+    }
+    return 'other';
+  }
+
+  function translateCategory(category) {
+    const map = {
+      photo: 'Фото',
+      video: 'Відео',
+      docs: 'Документи',
+      sheets: 'Таблиці / DBF',
+      pdf: 'PDF',
+      slides: 'Презентації',
+      text: 'Текстові файли',
+      other: 'Інше'
+    };
+    return map[category] || category;
+  }
+
+  function resetState() {
+    progressSection.style.display = 'none';
+    resultsSection.style.display  = 'none';
+    progressBar.style.width       = '0%';
+    progressText.textContent      = '';
+
+    fileCountEl.textContent   = '0';
+    totalSizeEl.textContent   = '0 МБ';
+    totalSizeGBEl.textContent = '0 ГБ';
+    categoriesList.innerHTML  = '';
+
+    animalNameEl.textContent = 'Поки що тихо…';
+    animalMsgEl.textContent  =
+      'Обери папку або файли, щоб дізнатися, хто сьогодні до тебе завітає: зайчик, єнот чи олень 🐰🦝🦌';
+    animalImgEl.src = '';
+    animalImgEl.alt = 'Тваринка';
+    currentAnimalType = null;
+
+    stopCamera();
+    canvasEl.style.display = 'none';
+    downloadLinkEl.style.display = 'none';
+  }
+
+  // ===== Обробка вибору файлів =====
+//   pickFilesBtn.addEventListener('click', () => fileInput.click());
+  // було: pickFolderBtn.addEventListener(...)
+
+analyzeComputerBtn.addEventListener('click', () => {
+  analysisMode = 'auto';   // аналізуємо тільки дозволені папки всередині вибраного дерева
+  folderInput.click();
+});
+
+pickFolderBtn.addEventListener('click', () => {
+  analysisMode = 'custom'; // аналізуємо саме обрану папку
+  folderInput.click();
+});
+
+resetBtn.addEventListener('click', resetState);
+
+folderInput.addEventListener('change', () => handleFiles(folderInput.files));
+
+
+
+
+ function handleFiles(fileList) {
+  if (!fileList || fileList.length === 0) return;
+
+  const files = Array.from(fileList);
+
+  // Захист від надто великого набору файлів
+  if (files.length > MAX_FILES_FOR_ANALYSIS) {
+    alert(
+      `Ти обрав(ла) дуже багато файлів (${files.length.toLocaleString('uk-UA')}). ` +
+      `Аналіз такого обсягу може «підвісити» браузер.\n\n` +
+      `У режимі "Аналіз комп'ютера" краще обирати папку з профілем користувача, ` +
+      `а в режимі "Обрати папку" — конкретну теку з особистими файлами.`
+    );
+    return;
+  }
+
+  progressSection.style.display = 'block';
+  resultsSection.style.display  = 'none';
+  progressBar.style.width       = '0%';
+  progressText.textContent      = 'Підрахунок файлів…';
+
+  pickFolderBtn.disabled      = true;
+  analyzeComputerBtn.disabled = true;
+  resetBtn.disabled           = true;
+
+  const stats = {
+    totalFiles: 0,
+    totalBytes: 0,
+    categories: {}
+  };
+
+  const total = files.length;
+  let processed = 0;
+
+  for (const key of Object.keys(FILE_TYPES)) {
+    stats.categories[key] = { count: 0, bytes: 0 };
+  }
+  stats.categories.other = { count: 0, bytes: 0 };
+
+  const batchSize = 300;
+
+  function processBatch(start) {
+    const end = Math.min(start + batchSize, total);
+
+    for (let i = start; i < end; i++) {
+      const file = files[i];
+      const path = file.webkitRelativePath || file.name;
+
+      // 1) відсікаємо системні каталоги
+      if (isSystemPath(path)) {
+        processed++;
+        continue;
+      }
+
+      // 2) у режимі "Аналіз комп'ютера" враховуємо тільки дозволені папки
+      if (analysisMode === 'auto' && !isAllowedFolderPath(path)) {
+        processed++;
+        continue;
+      }
+
+      const category = classifyFile(file);
+      if (!category) {
+        processed++;
+        continue;
+      }
+
+      stats.totalFiles++;
+      stats.totalBytes += file.size;
+      if (!stats.categories[category]) {
+        stats.categories[category] = { count: 0, bytes: 0 };
+      }
+      stats.categories[category].count++;
+      stats.categories[category].bytes += file.size;
+
+      processed++;
+    }
+
+    const percent = Math.round((processed / total) * 100);
+    progressBar.style.width  = `${percent}%`;
+    progressText.textContent = `Опрацьовано ${processed} з ${total} файлів (${percent}%)`;
+
+    if (processed < total) {
+      setTimeout(() => processBatch(end), 0);
+    } else {
+      finalizeStats(stats);
+      pickFolderBtn.disabled      = false;
+      analyzeComputerBtn.disabled = false;
+      resetBtn.disabled           = false;
+    }
+  }
+
+  setTimeout(() => processBatch(0), 0);
+}
+
+
+  function finalizeStats(stats) {
+    resultsSection.style.display = 'grid';
+
+    fileCountEl.textContent = stats.totalFiles.toLocaleString('uk-UA');
+    totalSizeEl.textContent = formatBytes(stats.totalBytes);
+
+    const totalGB = stats.totalBytes / (1024 * 1024 * 1024);
+    totalSizeGBEl.textContent = totalGB.toFixed(2) + ' ГБ';
+
+    categoriesList.innerHTML = '';
+    const entries = Object.entries(stats.categories)
+      .filter(([_, v]) => v.count > 0)
+      .sort((a, b) => b[1].bytes - a[1].bytes);
+
+    if (entries.length === 0) {
+      categoriesList.innerHTML =
+        '<div style="opacity:0.7;">Користувацьких файлів не знайдено.</div>';
+    } else {
+      for (const [category, info] of entries) {
+        const row = document.createElement('div');
+        row.className = 'categories-row';
+        row.innerHTML = `
+          <span>${translateCategory(category)}</span>
+          <span>${info.count.toLocaleString('uk-UA')} шт · ${formatBytes(info.bytes)}</span>
+        `;
+        categoriesList.appendChild(row);
+      }
+    }
+
+    updateAnimal(totalGB);
+  }
+
+  // ===== Вибір тваринки =====
+  function updateAnimal(totalGB) {
+    const totalMB = totalGB * 1024;
+
+    if (totalGB > 3) {
+      currentAnimalType = 'deer';
+      animalNameEl.textContent = 'Олень-охоронець 🦌';
+      animalMsgEl.textContent =
+        `Увага: ${totalGB.toFixed(2)} GB твоїх особистих даних знаходяться під загрозою втрати при поломці диска! ` +
+        'Подумай, які файли варто перенести у хмару (наприклад, Google Диск).';
+      animalImgEl.src = 'deer.png';
+      animalImgEl.alt = 'Олень';
+    } else if (totalMB < 100) {
+      currentAnimalType = 'bunny';
+      animalNameEl.textContent = 'Обережний зайчик 🐰';
+      animalMsgEl.textContent =
+        `У тебе всього ${totalMB.toFixed(1)} МБ файлів. Ти молодець, майже нічого зайвого! ` +
+        'Все одно корисно зберігати копії важливих файлів у хмарі.';
+      animalImgEl.src = 'bunny.png';
+      animalImgEl.alt = 'Зайчик';
+    } else {
+      currentAnimalType = 'raccoon';
+      animalNameEl.textContent = 'Хитрий єнот 🦝';
+      animalMsgEl.textContent =
+        `У тебе приблизно ${totalGB.toFixed(2)} ГБ особистих файлів. Єнот каже, що це скарб! ` +
+        'Але частину фото й відео краще перенести в хмару, щоб не захаращувати комп’ютер.';
+      animalImgEl.src = 'raccoon.png';
+      animalImgEl.alt = 'Єнот';
+    }
+  }
+
+  // ===== Камера =====
+  async function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Камера не підтримується в цьому браузері.');
+      return;
+    }
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoEl.srcObject = cameraStream;
+
+      videoEl.onloadedmetadata = () => {
+        canvasEl.width  = videoEl.videoWidth;
+        canvasEl.height = videoEl.videoHeight;
+      };
+
+      videoEl.style.display = 'block';
+      canvasEl.style.display = 'none';
+      downloadLinkEl.style.display = 'none';
+
+      const frameSrc = FRAME_FILES[currentAnimalType];
+      if (frameSrc) {
+        maskPreviewEl.src = frameSrc;
+        maskPreviewEl.style.display = 'block';
+      } else {
+        maskPreviewEl.style.display = 'none';
+      }
+
+      startCameraBtn.disabled = true;
+      stopCameraBtn.disabled = false;
+      takePhotoBtn.disabled = false;
+    } catch (err) {
+      console.error(err);
+      alert('Не вдалося отримати доступ до камери.');
+    }
+  }
+
+  function stopCamera() {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream = null;
+    }
+    videoEl.srcObject = null;
+    videoEl.style.display = 'none';
+    maskPreviewEl.style.display = 'none';
+
+    startCameraBtn.disabled = false;
+    stopCameraBtn.disabled = true;
+    takePhotoBtn.disabled = true;
+  }
+
+  function takePhoto() {
+    if (!cameraStream) return;
+
+    const ctx = canvasEl.getContext('2d');
+    const width  = canvasEl.width;
+    const height = canvasEl.height;
+
+    // кадр з камери
+    ctx.drawImage(videoEl, 0, 0, width, height);
+
+    const frameSrc = FRAME_FILES[currentAnimalType];
+
+    if (frameSrc) {
+      const frame = new Image();
+      frame.onload = () => {
+        ctx.drawImage(frame, 0, 0, width, height);
+        finishPhoto();
+      };
+      frame.onerror = finishPhoto;
+      frame.src = frameSrc;
+    } else {
+      finishPhoto();
+    }
+
+    function finishPhoto() {
+      canvasEl.style.display = 'block';
+      const dataURL = canvasEl.toDataURL('image/png');
+      downloadLinkEl.href = dataURL;
+      downloadLinkEl.download = 'my_animal_photo.png';
+      downloadLinkEl.style.display = 'inline-block';
+    }
+  }
+
+  startCameraBtn.addEventListener('click', startCamera);
+  stopCameraBtn.addEventListener('click', stopCamera);
+  takePhotoBtn.addEventListener('click', takePhoto);
+</script>
+</body>
+</html>
