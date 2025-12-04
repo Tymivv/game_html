@@ -161,12 +161,16 @@
       margin-bottom: 6px;
     }
     .animal-message {
-      margin: 20px 0;
-      color: #d93025;
-      font-weight: bold;
-      border: 2px solid #d93025;
-      padding: 10px;
-      border-radius: 10px;
+    /*font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 10px;*/
+    margin: 20px 0;
+    /*font-size: 1.2em;*/
+    color: #d93025;
+    font-weight: bold;
+    border: 2px solid #d93025;
+    padding: 10px;
+    border-radius: 10px;
     }
     .animal-img {
       width: 120px;
@@ -244,6 +248,38 @@
       background: #1f2937;
       color: #e5e7eb;
     }
+
+    /* Спіннер завантаження */
+.system-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+  padding: 20px;
+  background: #1e293b; /* Темний фон */
+  border-radius: 12px;
+  border: 1px solid #374151;
+  color: #fbbf24; /* Жовтий колір уваги */
+}
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #ffffff22;
+  border-top: 4px solid #fbbf24;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.loader-hint {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  max-width: 400px;
+  line-height: 1.5;
+}
   </style>
 </head>
 <body>
@@ -258,13 +294,26 @@
 
     <div class="controls">
       <!-- <button id="pickFilesBtn">📂 Обрати файли</button> -->
+    <!-- <button id="pickFolderBtn" class="secondary">💻 Обрати папку / диск для аналізу</button>
+      <button id="resetBtn" class="secondary">🔁 Скинути результат</button>-->
       <button id="pickFolderBtn" class="secondary">💻 Обрати папку / диск для аналізу</button>
-      <button id="resetBtn" class="secondary">🔁 Скинути результат</button>
+  
+      <button id="resetBtn" class="secondary" style="display:none;">🔁 Новий аналіз</button>
     </div>
 
     <!-- приховані input-и -->
     <!-- <input id="fileInput" type="file" multiple style="display:none" /> -->
     <input id="folderInput" type="file" webkitdirectory directory multiple style="display:none" />
+
+    <div id="systemProcessing" class="system-loader" style="display: none;">
+  <div class="spinner"></div>
+  <div style="font-weight: bold; margin-bottom: 5px;">⏳ Очікуємо відповідь від браузера...</div>
+  <div class="loader-hint">
+    Ви обрали папку. Зараз браузер сканує її структуру. <br>
+    Це може зайняти <strong>до 1 хвилини</strong>. <br>
+    Будь ласка, не закривайте сторінку, навіть якщо вона "завмерла".
+  </div>
+</div>
 
     <div class="progress-wrap" id="progressSection" style="display:none;">
       <div class="progress-bar-bg">
@@ -388,8 +437,10 @@
   const downloadLinkEl  = document.getElementById('downloadLink');
   const maskPreviewEl   = document.getElementById('maskPreview');
 
+  const systemProcessingEl = document.getElementById('systemProcessing');
   let cameraStream = null;
   let currentAnimalType = null; // 'deer' | 'bunny' | 'raccoon'
+
 
   // ===== Допоміжні функції =====
   function formatBytes(bytes) {
@@ -447,6 +498,7 @@
     totalSizeGBEl.textContent = '0 ГБ';
     categoriesList.innerHTML  = '';
 
+
     animalNameEl.textContent = 'Поки що тихо…';
     animalMsgEl.textContent  =
       'Обери папку або файли, щоб дізнатися, хто сьогодні до тебе завітає: зайчик, єнот чи олень 🐰🦝🦌';
@@ -461,24 +513,71 @@
 
   // ===== Обробка вибору файлів =====
 //   pickFilesBtn.addEventListener('click', () => fileInput.click());
-  pickFolderBtn.addEventListener('click', () => folderInput.click());
-  resetBtn.addEventListener('click', resetState);
+  //pickFolderBtn.addEventListener('click', () => folderInput.click());
+
+// 1. Слухач для кнопки "Обрати папку"
+  pickFolderBtn.addEventListener('click', () => {
+    // КРОК 1: Примусово очищаємо все ПЕРЕД відкриттям діалогу
+    // resetState(); 
+    
+    // КРОК 2: Очищаємо значення input. 
+    // Це критично важливо: це розриває посилання на старий FileList в пам'яті браузера
+    folderInput.value = ''; 
+    
+    // 2. Змінюємо UI ОДРАЗУ (ще до вибору файлів)
+    // Ховаємо кнопку вибору
+    pickFolderBtn.style.display = 'none';
+    
+    // Показуємо кнопку перезавантаження (на випадок якщо передумали)
+    resetBtn.style.display = 'inline-flex';
+    
+    // ПОКАЗУЄМО СПІННЕР ОЧІКУВАННЯ
+    systemProcessingEl.style.display = 'flex';
+    
+    // 3. Відкриваємо діалог (через невелику затримку, щоб UI встиг оновитись)
+    setTimeout(() => {
+      folderInput.click();
+    }, 50);
+  });
+
+  //resetBtn.addEventListener('click', resetState);
+  resetBtn.addEventListener('click', () => {
+    window.location.reload();
+  });
 
 //   fileInput.addEventListener('change', () => handleFiles(fileInput.files));
-  folderInput.addEventListener('change', () => handleFiles(folderInput.files));
+ // folderInput.addEventListener('change', () => handleFiles(folderInput.files));
+
+// 2. Слухач зміни input (Старт сканування)
+  folderInput.addEventListener('change', (event) => {
+    // Додаткова перевірка безпеки
+    if (!event.target.files || event.target.files.length === 0) {
+        return; // Користувач натиснув "Скасувати" у вікні вибору
+    }
+    // ХОВАЄМО кнопку вибору, ПОКАЗУЄМО кнопку перезавантаження
+    pickFolderBtn.style.display = 'none';
+    resetBtn.style.display = 'inline-flex';
+    
+    // Коли браузер "розвисне" і віддасть файли:
+    // ХОВАЄМО системний спіннер
+    systemProcessingEl.style.display = 'none';
+    // Викликаємо вашу оптимізовану функцію (Крок 1)
+    handleFiles(event.target.files);
+  });
 
   function handleFiles(fileList) {
     if (!fileList || fileList.length === 0) return;
+    
+    // 1. НЕ конвертуємо в Array.from, працюємо з fileList напряму
+    // const files = Array.from(fileList); <--- ЦЕ ВИДАЛИТИ
 
-    const files = Array.from(fileList);
     progressSection.style.display = 'block';
     resultsSection.style.display  = 'none';
     progressBar.style.width       = '0%';
     progressText.textContent      = 'Підрахунок файлів…';
 
-    // pickFilesBtn.disabled  = true;
-    pickFolderBtn.disabled = true;
-    resetBtn.disabled      = true;
+    //pickFolderBtn.disabled = true;
+    //resetBtn.disabled      = true;
 
     const stats = {
       totalFiles: 0,
@@ -486,7 +585,8 @@
       categories: {}
     };
 
-    const total = files.length;
+    // Використовуємо властивість length напряму з об'єкта
+    const total = fileList.length; 
     let processed = 0;
 
     for (const key of Object.keys(FILE_TYPES)) {
@@ -494,12 +594,19 @@
     }
     stats.categories.other = { count: 0, bytes: 0 };
 
-    const batchSize = 400;
+    // 2. Зменшуємо розмір пакету, щоб дати UI "дихати" частіше
+    const batchSize = 1000; 
 
     function processBatch(start) {
       const end = Math.min(start + batchSize, total);
+      
       for (let i = start; i < end; i++) {
-        const file = files[i];
+        // 3. Доступ за індексом напряму до fileList
+        const file = fileList[i]; 
+        
+        // Перевірка на всяк випадок, якщо файл недоступний
+        if (!file) continue;
+
         const path = file.webkitRelativePath || file.name;
 
         if (isSystemPath(path)) {
@@ -524,22 +631,28 @@
         processed++;
       }
 
-      const percent = Math.round((processed / total) * 100);
+      // Оновлюємо UI
+      const percent = Math.floor((processed / total) * 100);
       progressBar.style.width  = `${percent}%`;
-      progressText.textContent = `Опрацьовано ${processed} з ${total} файлів (${percent}%)`;
+      // Оновлюємо текст рідше, щоб не гальмувати рендеринг (наприклад, кожні 1000 файлів)
+      if (processed % 1000 === 0 || processed === total) {
+          progressText.textContent = `Опрацьовано ${processed} з ${total} файлів (${percent}%)`;
+      }
 
       if (processed < total) {
-        window.requestAnimationFrame(() => processBatch(end));
+        // setTimeout(..., 0) дає трохи більше часу процесору ніж requestAnimationFrame у важких задачах
+        setTimeout(() => processBatch(end), 0);
       } else {
         finalizeStats(stats);
-        // pickFilesBtn.disabled  = false;
-        pickFolderBtn.disabled = false;
-        resetBtn.disabled      = false;
+        //pickFolderBtn.disabled = false;
+        //resetBtn.disabled      = false;
       }
     }
 
-    window.requestAnimationFrame(() => processBatch(0));
+    processBatch(0);
   }
+
+
 
   function finalizeStats(stats) {
     resultsSection.style.display = 'grid';
@@ -693,4 +806,3 @@
 </script>
 </body>
 </html>
-
