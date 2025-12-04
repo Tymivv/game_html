@@ -565,6 +565,18 @@
     handleFiles(event.target.files);
   });
 
+  // ===== Обробка кнопки СКАСУВАТИ у вікні вибору =====
+  folderInput.addEventListener('cancel', () => {
+    // 1. Ховаємо спіннер очікування
+    systemProcessingEl.style.display = 'none';
+    
+    // 2. Повертаємо кнопку "Обрати папку"
+    pickFolderBtn.style.display = 'inline-flex';
+    
+    // 3. Ховаємо кнопку "Новий аналіз", бо нічого не відбулося
+    resetBtn.style.display = 'none';
+  });
+
   function handleFiles(fileList) {
     if (!fileList || fileList.length === 0) return;
     
@@ -806,4 +818,5 @@
 </script>
 </body>
 </html>
+
 
