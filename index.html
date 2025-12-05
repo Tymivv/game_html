@@ -439,7 +439,8 @@
   const FRAME_FILES = {
     deer: 'deer_frame.png',
     bunny: 'bunny_frame.png',
-    raccoon: 'raccoon_frame.png'
+    raccoon: 'raccoon_frame.png',
+    ghost:'ghost_frame.png'
   };
 
   // ===== DOM-елементи =====
@@ -793,16 +794,16 @@
         ${backupInstructionsHtml}
       `;
 
-} else if (totalMB === 0) {
+    } else if (totalMB === 0) {
       // --- ПОРОЖНЬО або ХМАРА ---
-      currentAnimalType = null; 
+      currentAnimalType = 'ghost'; // Або 'ghost', якщо хочете додати картинку
       
       // Змінюємо заголовок на щось загадкове або позитивне
       animalNameEl.textContent = 'Невловимий привид 👻'; 
       
       // Якщо немає картинки для 0 байт, краще її приховати, щоб не було "битого" значка
-      animalImgEl.src = ''; 
-      animalImgEl.style.display = 'none'; // Ховаємо рамку картинки
+      animalImgEl.src = 'ghost.png'; 
+      //animalImgEl.style.display = 'none'; // Ховаємо рамку картинки
 
       // Використовуємо innerHTML для красивого форматування
       animalMsgEl.innerHTML = `
@@ -929,4 +930,3 @@
 </script>
 </body>
 </html>
-
