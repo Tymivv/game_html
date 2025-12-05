@@ -54,7 +54,8 @@
       gap: 6px;
     }
     button.secondary {
-      background: #1f2937;
+      /*background: #1f2937;*/
+      background:#0c5bc9;
       color: #e5e7eb;
       box-shadow: 0 8px 20px rgba(15,23,42,0.7);
     }
@@ -67,12 +68,37 @@
       cursor: default;
       box-shadow: none;
     }
-    .hint {
+    /*.hint {
       font-size: 0.9rem;
       opacity: 0.8;
       text-align: center;
       margin-bottom: 10px;
-    }
+    }*/
+
+    .hint {
+
+  
+  /* Відступи всередині */
+  padding: 10px;
+  
+  /* Відступи зовні */
+  margin: 0 auto 15px auto;
+  
+  /* Текст */
+  color: #9ca3af; /* Світло-сірий для звичайного тексту */
+  line-height: 1.6; /* Більший інтервал між рядками для легкості читання */
+  text-align: center;
+  max-width: 900px; /* Обмежуємо ширину, щоб рядок не був надто довгим */
+}
+
+/* Стиль для виділеного тексту <b> */
+.hint b {
+  color: #e5e7eb; /* Яскраво-білий */
+  font-weight: 600;
+  display: inline-block; /* Щоб трохи виділити структуру */
+}
+
+
     .progress-wrap {
       margin: 12px 0 4px;
     }
@@ -288,15 +314,23 @@
   <h1>🎒 Що в твоєму рюкзаку?</h1>
 
   <div class="card">
-    <p class="hint">
-      Обери папку на своєму комп’ютері. Ми порахуємо <b>тільки фото, відео, документи, PDF, DBF та інші офісні файли</b> — без системних.
-    </p>
+    <!--<p class="hint">
+      Обери папку на своєму комп’ютері. Ми оцінимо обсяг Твоїх файлів, щоб ти зрозумів: чи легко буде відновити ці дані, якщо комп'ютер раптово вийде з ладу? Ми порахуємо <b>тільки фото, відео, документи, PDF, DBF та інші офісні файли</b> — без системних.
+    </p>-->
+    <div class="hint">
+      <div style="margin-bottom: 8px;">
+    🔍 <b>Оцінка ризиків:</b> Ми проскануємо обсяг Твоїх файлів, щоб Ти зрозумів: чи легко буде відновити ці дані, якщо комп'ютер раптово вийде з ладу?
+      </div>
+      <div style="font-size: 0.85em; opacity: 0.9; color: #60a5fa;">
+        ℹ️ Рахуємо тільки фото, відео, документи (PDF, DOC, XLS) — без системних файлів.
+      </div>
+    </div>
 
     <div class="controls">
       <!-- <button id="pickFilesBtn">📂 Обрати файли</button> -->
     <!-- <button id="pickFolderBtn" class="secondary">💻 Обрати папку / диск для аналізу</button>
       <button id="resetBtn" class="secondary">🔁 Скинути результат</button>-->
-      <button id="pickFolderBtn" class="secondary">💻 Обрати папку для аналізу</button>
+      <button id="pickFolderBtn" class="secondary">💻 Обрати папку / диск для аналізу</button>
   
       <button id="resetBtn" class="secondary" style="display:none;">🔁 Новий аналіз</button>
     </div>
@@ -374,7 +408,7 @@
     </div>
 
     <div class="footer-note">
-      Усі розрахунки та робота з камерою виконуються <b>локально в браузері</b>. Файли та фото нікуди не передаються.
+      🔒 Усі розрахунки та робота з камерою виконуються <b>локально в браузері</b>. Файли нікуди не передаються.
     </div>
   </div>
 </div>
@@ -565,15 +599,11 @@
     handleFiles(event.target.files);
   });
 
-  // ===== Обробка кнопки СКАСУВАТИ у вікні вибору =====
+  // 4. Якщо користувач натиснув СКАСУВАТИ (вікно закрилося)
   folderInput.addEventListener('cancel', () => {
-    // 1. Ховаємо спіннер очікування
+    // Повертаємо все як було на початку
     systemProcessingEl.style.display = 'none';
-    
-    // 2. Повертаємо кнопку "Обрати папку"
     pickFolderBtn.style.display = 'inline-flex';
-    
-    // 3. Ховаємо кнопку "Новий аналіз", бо нічого не відбулося
     resetBtn.style.display = 'none';
   });
 
@@ -702,32 +732,92 @@
   function updateAnimal(totalGB) {
     const totalMB = totalGB * 1024;
 
+    // Скидаємо стилі
+    animalMsgEl.style.border = "none";
+    animalMsgEl.style.color = "inherit";
+    animalMsgEl.style.padding = "10px";
+
+    // 1. Зберігаємо спільну інструкцію в змінну, щоб не дублювати код
+    // (Зверніть увагу: я прибрав зайві пробіли в HTML для акуратності)
+    const backupInstructionsHtml = `
+        <div style="margin-top: 15px; padding: 12px; font-size: 0.9rem; text-align: left; color: #9ca3af; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid #374151;">
+          <strong>Як налаштувати захист даних:</strong>
+          <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.5;">
+            <li style="margin-bottom: 8px;">
+              📄 <span>Бекапування даних на Google Диск</span>
+              (<a href="https://ddwr-prd-436285301276-eu-central-1-itb-dev-web-mypb.s3.eu-central-1.amazonaws.com/static/p.guide/upl_files/instr_file/6461e5007d720.pdf?response-content-type=application%2Fpdf&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDGV1LWNlbnRyYWwtMSJHMEUCIHnmDZcBP9sAkgqvZYx%2BLHj1a1tBBlj260W%2BAXEuUuiQAiEAwk2fKIuhqkyWO5imoJF7iCFH%2FqJ0EeNy0Bt6hfn1P48qxQUIWhABGgw0MzYyODUzMDEyNzYiDLimBeoVPQr1ut5GZSqiBZ3HBngaUpAfecErKDjeFPNLnvbi9iqCJqbJDP4d6tGJyO1G1t9gvt%2F6Kz75vaQAkpo0VJ2JLklMGi9NAWhF9Ur%2BW37iWa5Pj6D6JT4XQnfRvLCwv25RPkoQqrtznId1H9A139XAOmFyTCTqScHvRPMf%2FmZVVtUUUcF2J9OW%2Fq3CZU%2FpwnJMaMh8O9JzmtnXeNEsYlC0zp8iF5nA7InET4WNxlcsxNoTU8vpN%2FDjYMwDWVZQkwY5VTThFgIecd3ovHWVYCLjd%2B2LVrpKVnc0yUNQzhZV4z3RoDhwR44nUQUGz2BnOp55H97ztIwu0pZcEy4LT2tTtaM7oytLtO%2BNOwazzhjAh%2BIqmCRupdGCfu1jDy1eM1FmUhVyUcLtnPr%2F4FwftpCBhjOkxDC318%2FdhiKvVmxr%2B3XaBXljUT8tMhmIvxZ54nRZzodZVRGH4lExzWREbJvDhu421l4zt1g0pM2%2BL%2FF9P7ODM2Gsz8jqmpipVFuL0ldnZE8hYURTGY%2F1Q5MYnGTgPxHHBQpX4vUKJDFT86ApKrTjqnRE%2FWWCZPM2NE8pTNcScbQZazIHxdp9ysRYdoRebX7zkLrA%2BQqCvloZfGrjTBA10NwZ9jEplZeJmZ2xnf1IVOiGUagc5Iyswh%2BjbDJVgrKID1lm5v87Ql0ycOIf4pm5UtUPIbx%2FnIY%2F8gjXhDG1uRZpBAde6l%2FvJvbBGL7NkliCANI5s1ZM3PaMppatNtFrvyWr9BkLZGmf8xcbbHwsoaLsruD7BfIQMzIkvMj9t3LEgt9VLw%2BayD4HVtz5znUSzGZK%2FSydkTP2rd%2BRKVWOFkG3Ebi8Q6GdELmi2wQU2o4gcXFAQ6Wk8mD7LdlH3wsXhwwCdnbfIQuFFETdhxBqvV%2Fm%2FmUZ2qMmtweFMOK3yskGOrEBQ%2BrMBTi%2FVJMlXGp6s6LL4jLtfcJvr89SblGhon8%2FqfRUGOztJAjaXK%2BF0etcP%2BhNLNyEKRqUpIao9gC5pzKvcrjXv2iDezMN9FYK0S8vVKNaktKtB7niXvQ9xH%2F0KCE6OFj7MeMqGO1r%2FZHD%2F9si9%2B68uQ%2BemrbwoFTnqvRyFtMeLtXsZ4cw9qgdwNwL%2BbEzDITCFFKDZceZJgEGmFm2Sv21tBQ%2BtK%2F%2F0Rn2Yf3fYl5v&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAWLFFBMIOCDY2L3WO%2F20251205%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20251205T091724Z&X-Amz-SignedHeaders=host&X-Amz-Expires=180&X-Amz-Signature=b7cfa15f065fd9cfabe66d35822a2abe66b232fb40bef9711aded5a889fdcf81" target="_blank" style="color: #a3e635; text-decoration: underline;">інструкція</a>)
+            </li>
+            <li>
+              ⬇️ <span>Завантажити розширення </span><a href="https://chromewebstore.google.com/detail/download-manager/nifkjnemcaijlemjjopklbehlndalbnh" target="_blank" style="color: #60a5fa; text-decoration: underline;">Download Manager</a>
+              <span style="opacity: 0.8">
+                (<a href="https://my.privatbank.ua/other_instructions/eyJpZCI6IjgzMCIsImlJZCI6IjMyMjY4IiwiYmxJZCI6IjQzNzA4IiwidE5tZSI6InFuYSJ9" target="_blank" style="color: #a3e635; text-decoration: underline;">інструкція</a>)
+              </span>
+            </li>
+          </ul>
+        </div>
+    `;
+
+    // 2. Логіка вибору тварини
     if (totalGB > 3) {
+      // --- ОЛЕНЬ ---
       currentAnimalType = 'deer';
       animalNameEl.textContent = 'Олень-охоронець 🦌';
-      animalMsgEl.textContent =
-        `⚠️ Увага: ${totalGB.toFixed(2)} GB твоїх особистих даних знаходяться під загрозою втрати при поломці диска! ` +
-        'Подумай, які файли варто перенести на Google Диск.';
       animalImgEl.src = 'deer.png';
-      animalImgEl.alt = 'Олень';
-    } else if (totalMB < 100) {
+      
+      // Стилі для Оленя (червоні)
+      animalMsgEl.style.border = "2px solid #d93025";
+      animalMsgEl.style.color = "#d93025";
+      animalMsgEl.style.borderRadius = "10px";
+
+      // Текст Оленя + Інструкція
+      animalMsgEl.innerHTML = `
+        <div style="margin-bottom: 12px;">
+          ⚠️ Увага: <b>${totalGB.toFixed(2)} GB</b> твоїх особистих даних знаходяться під загрозою втрати при поломці диска! 
+          Подумай, які файли варто перенести на Google Диск.
+        </div>
+        ${backupInstructionsHtml}
+      `;
+
+    } else if (totalMB < 100 && totalMB > 0) {
+      // --- ЗАЙЧИК ---
       currentAnimalType = 'bunny';
       animalNameEl.textContent = 'Обережний зайчик 🐰';
-      animalMsgEl.textContent =
-        `У тебе всього ${totalMB.toFixed(1)} МБ файлів. Ти молодець, майже нічого зайвого! ` +
-        'Все одно корисно зберігати копії важливих файлів на Google Диск.';
       animalImgEl.src = 'bunny.png';
-      animalImgEl.alt = 'Зайчик';
+
+      // Текст Зайчика + Інструкція
+      animalMsgEl.innerHTML = `
+        <div style="margin-bottom: 12px;">
+          У тебе всього <b>${totalMB.toFixed(1)} МБ</b> файлів. Ти молодець, майже нічого зайвого!
+          Але все одно корисно зберігати копії важливих файлів на Google Диск.
+        </div>
+        ${backupInstructionsHtml}
+      `;
+
+    } else if (totalMB === 0) {
+      // --- ПОРОЖНЬО (Тут інструкція не потрібна, бо нема файлів) ---
+      currentAnimalType = null;
+      animalNameEl.textContent = 'Порожньо...';
+      animalMsgEl.textContent = 'Додай папки (Робочий стіл, Завантаження), щоб ми порахували вагу.';
+      animalImgEl.src = ''; 
+
     } else {
+      // --- ЄНОТ ---
       currentAnimalType = 'raccoon';
       animalNameEl.textContent = 'Хитрий єнот 🦝';
-      animalMsgEl.textContent =
-        `⚠️ У тебе приблизно ${totalGB.toFixed(2)} ГБ особистих файлів. Єнот каже, що це скарб! ` +
-        'Але робочі файли краще перенести на Google Диск, щоб не захаращувати комп’ютер.';
       animalImgEl.src = 'raccoon.png';
-      animalImgEl.alt = 'Єнот';
+
+      // Текст Єнота + Інструкція
+      animalMsgEl.innerHTML = `
+        <div style="margin-bottom: 12px;">
+          ⚠️ У тебе приблизно <b>${totalGB.toFixed(2)} ГБ</b> особистих файлів. Єнот каже, що це скарб! 
+          Але робочі файли краще перенести на Google Диск, щоб не захаращувати комп’ютер.
+        </div>
+        ${backupInstructionsHtml}
+      `;
     }
   }
+
+
 
   // ===== Камера =====
   async function startCamera() {
@@ -818,5 +908,3 @@
 </script>
 </body>
 </html>
-
-
